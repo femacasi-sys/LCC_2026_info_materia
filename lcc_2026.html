@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab. Control de Calidad 2026 · ORT Uruguay</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&family=JetBrains+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F4F6F9;--bg2:#ECEEF3;--surface:#FFFFFF;--surface2:#F0F2F7;
+  --navy:#0B1E3D;--blue:#0055A5;--blue-mid:#1A6DC8;--cyan:#00A8CC;
+  --teal:#06C7A0;--amber:#F4900C;--red:#C8242B;
+  --border:#D0D8E8;--border2:rgba(0,85,165,0.15);
+  --text:#0B1E3D;--muted:#526480;--faint:#B8C4D8;--pale:#E8EDF5;
+  --glow-blue:rgba(0,85,165,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);line-height:1.7;overflow-x:hidden}
+
+/* GRID BACKGROUND */
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,85,165,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,85,165,0.04) 1px,transparent 1px);
+  background-size:40px 40px}
+.grid-bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 70% 20%,rgba(0,168,204,0.06),transparent 70%),
+             radial-gradient(ellipse 50% 40% at 20% 80%,rgba(6,199,160,0.04),transparent 60%)}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2.5rem;height:56px;
+  background:rgba(244,246,249,0.92);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)}
+.nav-logo{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;
+  letter-spacing:.08em;color:var(--blue);text-decoration:none;text-transform:uppercase;
+  display:flex;align-items:center;gap:.75rem}
+.nav-logo::before{content:'LCC';background:var(--blue);color:#fff;
+  font-size:.6rem;padding:.2rem .45rem;border-radius:3px;letter-spacing:.12em}
+.nav-links{display:flex;gap:.15rem;list-style:none}
+.nav-links a{color:var(--muted);font-size:.75rem;font-weight:500;text-decoration:none;
+  padding:.35rem .8rem;border-radius:4px;letter-spacing:.03em;transition:all .2s;
+  font-family:'JetBrains Mono',monospace}
+.nav-links a:hover,.nav-links a.active{color:var(--blue);background:var(--glow-blue);border-radius:4px}
+
+/* CONTENT */
+.content{position:relative;z-index:2}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:80px 3rem 5rem;max-width:1180px;margin:0 auto;position:relative}
+.hero-code{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--cyan);margin-bottom:1.5rem;
+  display:flex;align-items:center;gap:.75rem;
+  opacity:0;animation:slideUp .6s .15s ease forwards}
+.hero-code::before{content:'';width:32px;height:2px;background:var(--cyan)}
+.hero-h1{font-family:'Crimson Pro',serif;font-size:clamp(3.8rem,9vw,8rem);
+  font-weight:300;line-height:.92;letter-spacing:-.02em;
+  opacity:0;animation:slideUp .7s .3s ease forwards;margin-bottom:.3em}
+.hero-h1 .word-lab{display:block;font-weight:600;color:var(--navy)}
+.hero-h1 .word-control{display:block;font-style:italic;color:var(--blue-mid)}
+.hero-h1 .word-calidad{display:block;font-weight:300;color:var(--muted);font-size:.55em;
+  font-style:normal;font-family:'JetBrains Mono',monospace;letter-spacing:.1em;
+  text-transform:uppercase;margin-top:.4em}
+.hero-sub{font-family:'Crimson Pro',serif;font-style:italic;font-size:1.2rem;
+  color:var(--muted);max-width:560px;line-height:1.75;margin:1.5rem 0 2.5rem;
+  opacity:0;animation:slideUp .6s .45s ease forwards}
+.hero-metrics{display:grid;grid-template-columns:repeat(4,auto);gap:0;
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;
+  width:fit-content;opacity:0;animation:slideUp .6s .6s ease forwards}
+.metric{padding:1rem 1.75rem;border-right:1px solid var(--border);background:var(--surface)}
+.metric:last-child{border-right:none}
+.metric-val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--blue);display:block}
+.metric-lbl{font-size:.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-top:.1rem}
+.hero-tag-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:2rem;
+  opacity:0;animation:slideUp .6s .75s ease forwards}
+.htag{display:inline-flex;align-items:center;gap:.4rem;border:1px solid var(--border);
+  border-radius:3px;padding:.35rem .8rem;font-size:.72rem;color:var(--muted);
+  background:var(--surface);font-family:'JetBrains Mono',monospace;letter-spacing:.03em}
+.htag-dot{width:4px;height:4px;background:var(--blue);flex-shrink:0;border-radius:50%}
+
+/* SCAN LINE DECORATION */
+.hero-deco{position:absolute;right:3rem;top:50%;transform:translateY(-50%);
+  width:280px;height:280px;opacity:.12;pointer-events:none;
+  opacity:0;animation:slideUp .8s .9s ease forwards}
+.scan-circle{position:absolute;border-radius:50%;border:1px solid var(--blue)}
+.scan-circle:nth-child(1){inset:0;animation:rotate 8s linear infinite}
+.scan-circle:nth-child(2){inset:25px;border-style:dashed;animation:rotate 12s linear reverse infinite}
+.scan-circle:nth-child(3){inset:60px;border:2px solid var(--cyan)}
+.scan-cross{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.scan-cross::before,.scan-cross::after{content:'';position:absolute;background:var(--blue);opacity:.4}
+.scan-cross::before{width:1px;height:60%;left:50%}
+.scan-cross::after{height:1px;width:60%;top:50%}
+@keyframes rotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:1.25rem;padding:0 2.5rem;margin:1rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.divider-cross{width:12px;height:12px;position:relative;flex-shrink:0}
+.divider-cross::before,.divider-cross::after{content:'';position:absolute;background:var(--faint)}
+.divider-cross::before{width:1px;height:100%;left:50%;transform:translateX(-50%)}
+.divider-cross::after{height:1px;width:100%;top:50%;transform:translateY(-50%)}
+
+/* SECTIONS */
+section{padding:5rem 2.5rem;position:relative}
+.section-inner{max-width:1180px;margin:0 auto}
+.eyebrow{display:flex;align-items:center;gap:.6rem;
+  font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.5rem}
+.eyebrow::before{content:'';width:16px;height:2px;background:var(--blue)}
+.section-h2{font-family:'Crimson Pro',serif;font-size:clamp(2rem,4vw,3.2rem);
+  font-weight:400;line-height:1.1;letter-spacing:-.01em;margin-bottom:2.5rem}
+.section-h2 em{font-style:italic;color:var(--blue-mid)}
+
+/* MODULE BADGE */
+.mod-badge{display:inline-flex;align-items:center;gap:.4rem;
+  background:var(--pale);border:1px solid var(--border2);border-radius:3px;
+  padding:.2rem .6rem;font-family:'JetBrains Mono',monospace;font-size:.6rem;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:.75rem}
+
+/* DOCENTES */
+.docentes-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:1px;background:var(--border);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden}
+.docente-card{background:var(--surface);padding:2rem;transition:background .2s;position:relative}
+.docente-card:hover{background:var(--surface2)}
+.docente-card.coord::before{content:'COORDINA';position:absolute;top:1.25rem;right:1.25rem;
+  font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.15em;
+  color:var(--blue);border:1px solid var(--border2);padding:.15rem .45rem;border-radius:2px}
+.avatar{width:52px;height:52px;border-radius:6px;display:flex;align-items:center;
+  justify-content:center;margin-bottom:1.25rem;position:relative}
+.avatar-initials{font-family:'Crimson Pro',serif;font-size:1.25rem;font-weight:700;
+  position:relative;z-index:1;color:#fff}
+.avatar-line{position:absolute;bottom:-8px;left:0;right:0;height:2px;border-radius:1px}
+.doc-name{font-family:'Crimson Pro',serif;font-size:1.15rem;font-weight:600;margin-bottom:.15rem}
+.doc-role{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--cyan);margin-bottom:.875rem}
+.doc-bio{font-family:'Crimson Pro',serif;font-size:.98rem;font-style:italic;
+  color:var(--muted);line-height:1.65;margin-bottom:1.25rem}
+.doc-links{display:flex;gap:.4rem}
+.dlink{display:flex;align-items:center;gap:.3rem;font-size:.68rem;
+  color:var(--muted);text-decoration:none;border:1px solid var(--border);
+  border-radius:3px;padding:.28rem .65rem;transition:all .2s;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.03em}
+.dlink:hover{color:var(--blue);border-color:var(--blue);background:var(--glow-blue)}
+.dlink svg{width:10px;height:10px}
+
+/* PLAN */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start}
+.col-head{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:.875rem;
+  padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.tag-wrap{display:flex;flex-wrap:wrap;gap:.4rem}
+.tag{border:1px solid var(--border);border-radius:3px;padding:.3rem .75rem;
+  background:var(--surface);font-size:.82rem;color:var(--muted);
+  transition:all .2s;font-family:'IBM Plex Sans',sans-serif}
+.tag:hover{border-color:var(--blue);color:var(--blue);background:var(--glow-blue)}
+.tag.skill{border-color:rgba(0,168,204,0.25);color:var(--muted)}
+.tag.skill:hover{border-color:var(--cyan);color:var(--cyan)}
+
+.obj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.5rem;margin-top:2rem}
+.obj-item{display:flex;gap:.75rem;align-items:flex-start;padding:.75rem 1rem;
+  background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);
+  border-radius:4px;font-size:.85rem;color:var(--muted);line-height:1.55;transition:all .2s}
+.obj-item:hover{border-left-color:var(--cyan);color:var(--text)}
+.obj-num{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--faint);
+  flex-shrink:0;margin-top:.05rem;min-width:1.5rem}
+
+/* MÓDULOS */
+.mod-phases{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2.5rem}
+.phase-block{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.phase-head{padding:1.25rem 1.5rem;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid var(--border)}
+.phase-head.m1{background:linear-gradient(135deg,#EEF4FF,#E8F5FF)}
+.phase-head.m2{background:linear-gradient(135deg,#E8F9F5,#EEF4FF)}
+.phase-title{font-family:'Crimson Pro',serif;font-size:1.2rem;font-weight:600}
+.phase-weeks{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.1em;
+  color:var(--muted);border:1px solid var(--border);padding:.25rem .6rem;border-radius:3px;
+  background:#fff}
+.phase-body{padding:1.25rem 1.5rem;background:var(--surface)}
+.phase-desc{font-size:.875rem;color:var(--muted);margin-bottom:1rem;line-height:1.6}
+.phase-topics{display:flex;flex-direction:column;gap:.4rem}
+.topic-row{display:flex;align-items:center;gap:.65rem;font-size:.82rem;color:var(--muted);
+  padding:.3rem 0;border-bottom:1px solid rgba(0,0,0,0.04)}
+.topic-row:last-child{border-bottom:none}
+.topic-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.topic-dot.m1c{background:var(--blue)}
+.topic-dot.m2c{background:var(--teal)}
+
+.horarios-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2rem}
+.grupo-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.grupo-head{padding:.75rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center}
+.grupo-name{font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:600;color:var(--navy);
+  letter-spacing:.08em}
+.grupo-type{font-family:'JetBrains Mono',monospace;font-size:.6rem;padding:.15rem .45rem;
+  border-radius:2px;letter-spacing:.08em}
+.tipo-teo{background:#EEF4FF;color:var(--blue)}
+.tipo-pra{background:#E8F9F5;color:#059669}
+.grupo-row{display:flex;justify-content:space-between;align-items:center;
+  padding:.55rem 1.25rem;font-size:.82rem;border-bottom:1px solid var(--bg)}
+.grupo-row:last-child{border-bottom:none}
+.hora{font-family:'JetBrains Mono',monospace;color:var(--blue);font-size:.78rem}
+.dia{color:var(--muted)}
+
+/* METODOLOGÍA */
+.metodo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem}
+.metodo-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:1.5rem;transition:all .2s;border-top:3px solid var(--border)}
+.metodo-card:hover{background:var(--surface2);border-top-color:var(--blue)}
+.metodo-icon{font-size:1.75rem;margin-bottom:1rem;display:block}
+.metodo-title{font-family:'Crimson Pro',serif;font-size:1.1rem;font-weight:600;margin-bottom:.4rem}
+.metodo-body{font-size:.82rem;color:var(--muted);line-height:1.65}
+
+/* CALENDARIO */
+.cal-phase-label{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.18em;
+  text-transform:uppercase;padding:.5rem 1.25rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:.6rem}
+.cal-phase-label.lbl-m1{background:#EEF4FF;color:var(--blue)}
+.cal-phase-label.lbl-m2{background:#E8F9F5;color:#059669}
+.cal-phase-label.lbl-hol{background:#FFF8EC;color:var(--amber)}
+.cal-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:2rem}
+.cal-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.cal-table th{background:var(--navy);color:rgba(255,255,255,0.7);padding:.75rem 1.25rem;
+  text-align:left;font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  letter-spacing:.15em;text-transform:uppercase;font-weight:400;border-bottom:none}
+.cal-table td{padding:.6rem 1.25rem;border-bottom:1px solid var(--bg2);vertical-align:middle;color:var(--muted)}
+.cal-table tr:hover td{background:var(--pale)}
+.cal-table tr:last-child td{border-bottom:none}
+.c-sem{font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--faint)}
+.c-dia{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--blue-mid)}
+.c-fecha{color:var(--text);font-weight:500;white-space:nowrap}
+.c-doc{font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--cyan);white-space:nowrap}
+.c-tema{color:var(--text)}
+.c-tema.hol{color:var(--muted);font-style:italic}
+.c-tema.parcial{color:var(--red);font-weight:600}
+.badge{display:inline-flex;align-items:center;padding:.1rem .45rem;border-radius:2px;
+  font-family:'JetBrains Mono',monospace;font-size:.57rem;letter-spacing:.05em;margin-left:.4rem}
+.b-teo{background:#EEF4FF;color:var(--blue)}
+.b-pra{background:#E8F9F5;color:#059669}
+.b-eva{background:#FFF0E8;color:var(--amber)}
+.b-hol{background:#F5F5F5;color:var(--muted)}
+
+/* EVALUACIONES */
+.eval-grid{display:grid;gap:.625rem}
+.eval-row{display:grid;grid-template-columns:2.5rem 1fr auto;gap:1.25rem;align-items:center;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:.875rem 1.5rem;transition:all .2s;border-left:3px solid var(--border)}
+.eval-row:hover{border-left-color:var(--blue)}
+.eval-row.total-row{background:var(--navy);border-left-color:var(--cyan)}
+.eval-idx{font-family:'JetBrains Mono',monospace;font-size:1.6rem;font-weight:300;
+  color:var(--faint);line-height:1}
+.eval-idx.sigma{color:var(--cyan);font-size:1.4rem}
+.eval-name{font-weight:600;font-size:.875rem;color:var(--text)}
+.eval-row.total-row .eval-name{color:#fff}
+.eval-desc{font-size:.75rem;color:var(--muted);margin-top:.15rem;line-height:1.4}
+.eval-row.total-row .eval-desc{color:rgba(255,255,255,0.5)}
+.eval-bar{height:2px;background:var(--border);border-radius:100px;margin-top:.5rem;overflow:hidden}
+.eval-bar-fill{height:100%;border-radius:100px;transition:width 1.2s ease}
+.fill-25{background:linear-gradient(to right,var(--blue),var(--blue-mid))}
+.fill-20{background:linear-gradient(to right,var(--blue-mid),var(--cyan))}
+.fill-5{background:linear-gradient(to right,var(--cyan),var(--teal))}
+.fill-30{background:linear-gradient(to right,var(--amber),var(--red))}
+.eval-pts{text-align:right;font-family:'Crimson Pro',serif;font-size:2rem;font-weight:300;
+  color:var(--blue);line-height:1;white-space:nowrap}
+.eval-pts span{display:block;font-size:.62rem;font-family:'IBM Plex Sans';
+  color:var(--muted);margin-top:.15rem;letter-spacing:.05em;font-weight:400}
+.eval-row.total-row .eval-pts{color:var(--cyan)}
+.eval-row.total-row .eval-pts span{color:rgba(255,255,255,0.4)}
+
+/* CONDICIONES */
+.cond-list{display:grid;gap:.625rem;margin-top:1.5rem}
+.cond-item{display:flex;gap:1.25rem;align-items:flex-start;background:var(--surface);
+  border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;font-size:.85rem;color:var(--muted)}
+.cond-idx{font-family:'Crimson Pro',serif;font-size:1.75rem;font-weight:300;color:var(--faint);flex-shrink:0;line-height:1}
+
+/* RÚBRICA */
+.rub-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.rub-table{width:100%;border-collapse:collapse}
+.rub-table th{background:var(--navy);color:rgba(255,255,255,0.65);padding:.75rem 1.5rem;
+  text-align:left;font-family:'JetBrains Mono',monospace;font-size:.58rem;
+  letter-spacing:.15em;text-transform:uppercase;font-weight:400}
+.rub-table td{padding:1rem 1.5rem;border-bottom:1px solid var(--bg2);vertical-align:top;font-size:.85rem}
+.rub-table tr:last-child td{border-bottom:none}
+.rub-table td:first-child{font-family:'Crimson Pro',serif;font-size:.95rem;font-weight:600;
+  color:var(--text);white-space:nowrap;width:180px;border-right:1px solid var(--border)}
+.rub-table td:last-child{color:var(--muted)}
+.rub-table ul{list-style:none;display:flex;flex-direction:column;gap:.3rem}
+.rub-table li{display:flex;gap:.5rem;align-items:flex-start;line-height:1.5}
+.rub-table li::before{content:'→';color:var(--blue);flex-shrink:0;font-size:.8rem;line-height:1.5}
+
+/* BIBLIOGRAFÍA */
+.biblio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem}
+.bib-cat{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:.875rem;
+  padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+.bib-item{display:flex;gap:.65rem;background:var(--surface);border:1px solid var(--border);
+  border-radius:6px;padding:.875rem 1rem;margin-bottom:.45rem;transition:all .2s;
+  font-size:.88rem;color:var(--muted);line-height:1.55}
+.bib-item:hover{border-color:var(--blue);color:var(--text)}
+.bib-ico{color:var(--blue);flex-shrink:0;margin-top:2px}
+.bib-link{color:var(--cyan);text-decoration:none;font-size:.72rem;font-family:'JetBrains Mono';
+  display:block;margin-top:.2rem;letter-spacing:.04em}
+.bib-link:hover{text-decoration:underline}
+
+/* NOTA */
+.nota{background:#FFFBF0;border:1px solid rgba(244,144,12,0.3);border-radius:8px;
+  padding:.875rem 1.25rem;font-size:.82rem;color:#8A5A0A;display:flex;gap:.75rem;
+  align-items:flex-start;margin-top:1.5rem}
+
+/* REVEAL */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .55s ease,transform .55s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 2.5rem;
+  display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;
+  background:var(--surface)}
+.footer-brand{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;
+  color:var(--navy);letter-spacing:.08em}
+.footer-brand span{color:var(--blue)}
+.footer-info{font-size:.72rem;color:var(--muted);text-align:right;line-height:1.7;
+  font-family:'JetBrains Mono',monospace}
+
+@media(max-width:768px){
+  .two-col,.mod-phases,.horarios-wrap,.metodo-grid{grid-template-columns:1fr;gap:1rem}
+  nav{padding:0 1.25rem}.nav-links{display:none}
+  section{padding:3.5rem 1.25rem}.hero{padding:80px 1.25rem 4rem}
+  .hero-metrics{grid-template-columns:repeat(2,1fr)}
+  .eval-row{grid-template-columns:2rem 1fr auto}
+  .hero-deco{display:none}
+}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+
+<nav>
+  <a href="#" class="nav-logo">Laboratorio de Control de Calidad 2026</a>
+  <ul class="nav-links">
+    <li><a href="#docentes">Docentes</a></li>
+    <li><a href="#plan">Curso</a></li>
+    <li><a href="#modulos">Módulos</a></li>
+    <li><a href="#calendario">Calendario</a></li>
+    <li><a href="#evaluaciones">Evaluaciones</a></li>
+    <li><a href="#bibliografia">Bibliografía</a></li>
+  </ul>
+</nav>
+
+<div class="content">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-deco" style="opacity:0.15">
+    <div class="scan-circle"></div>
+    <div class="scan-circle"></div>
+    <div class="scan-circle"></div>
+    <div class="scan-cross"></div>
+  </div>
+  <div class="hero-code">Lic. e Ing. en Biotecnología · ORT Uruguay · Código 6401</div>
+  <h1 class="hero-h1">
+    <span class="word-lab">Laboratorio</span>
+    <span class="word-control">de Control</span>
+    <span class="word-calidad">de Calidad · 2026</span>
+  </h1>
+  <p class="hero-sub">Formación integral en sistemas de gestión de calidad farmacéutica y técnicas avanzadas de control de biofármacos bajo normativas GMP/GLP de clase mundial.</p>
+  <div class="hero-metrics">
+    <div class="metric"><span class="metric-val">6401</span><span class="metric-lbl">Código</span></div>
+    <div class="metric"><span class="metric-val">7/7</span><span class="metric-lbl">Semestre</span></div>
+    <div class="metric"><span class="metric-val">7</span><span class="metric-lbl">Docentes</span></div>
+    <div class="metric"><span class="metric-val">16 sem</span><span class="metric-lbl">Duración</span></div>
+  </div>
+  <div class="hero-tag-row">
+    <div class="htag"><div class="htag-dot"></div>Módulo 1 · Normativas GMP/GLP · 6 semanas</div>
+    <div class="htag"><div class="htag-dot"></div>Módulo 2 · Control Biofármacos · 10 semanas</div>
+    <div class="htag"><div class="htag-dot"></div>Grupos Teórico: M7A · M7B</div>
+    <div class="htag"><div class="htag-dot"></div>Grupos Práctico: M2_M7A · M2_M7B · M2_M7C · M2_M7D</div>
+  </div>
+</div>
+
+<div class="divider"><div class="divider-cross"></div><div class="divider-cross"></div><div class="divider-cross"></div></div>
+
+<!-- DOCENTES -->
+<section id="docentes"><div class="section-inner">
+  <div class="eyebrow reveal">Equipo docente</div>
+  <h2 class="section-h2 reveal">Plantel <em>Docente</em></h2>
+  <div class="docentes-grid reveal">
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#1A2E50,#1A6DC8)">
+        <span class="avatar-initials">LB</span>
+        <div class="avatar-line" style="background:var(--blue)"></div>
+      </div>
+      <div class="doc-name">Lorena Becco, MSc.</div>
+      <div class="doc-role">Máster Biología Celular y Molecular · UdelaR</div>
+      <p class="doc-bio">Licenciada en Bioquímica por la UdelaR y Máster en Biología Celular y Molecular (PEDECIBA). Más de una década en I+D en biotecnología, enfocada en diseño racional y producción de proteínas recombinantes para uso veterinario. Ayudante en el Departamento de Microbiología, Facultad de Química (UdelaR). Ex docente de Biología Celular y Molecular en la Maestría en Bioinformática (PEDECIBA). Docente del Laboratorio de Control de Calidad en ORT.</p>
+      <div class="doc-links">
+        <a href="mailto:lourdes.becco@gmail.com" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/lorena-becco-bb8538a7" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#0D3B2A,#059669)">
+        <span class="avatar-initials">VB</span>
+        <div class="avatar-line" style="background:var(--teal)"></div>
+      </div>
+      <div class="doc-name">Virginia Bengochea, MsC</div>
+      <div class="doc-role">MSc. Biotecnología · ATGen / ORT Uruguay</div>
+      <p class="doc-bio">Licenciada en Ciencias Biológicas y Máster en Biotecnología con especialización en Virología Bovina, ambos por la Universidad de la República. Se desempeñó en I+D y Control de Calidad en Biología Molecular en ATGen Diagnóstica y como técnica de laboratorio en el Centro de Salud Enrique Claveaux (ASSE). Profesora Adjunta en ORT Uruguay, coordinando el curso de Virología para las carreras de Biotecnología. Docente del Laboratorio de Control de Calidad.</p>
+      <div class="doc-links">
+        <a href="mailto:virbeng@gmail.com" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/virginia-valeria-bengochea-olveira-62878abb" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#1A2540,#2D5FA8)">
+        <span class="avatar-initials">NS</span>
+        <div class="avatar-line" style="background:var(--cyan)"></div>
+      </div>
+      <div class="doc-name">Nicolás Soriano Ávila, MsC(c)</div>
+      <div class="doc-role">Ing. Biotecnología · MsC(c) Química · Antarka / ORT</div>
+      <p class="doc-bio">Ingeniero en Biotecnología por la Universidad ORT Uruguay. Candidato a Magíster en Química por la Universidad de la República (2022–2025). Asistente Docente de Investigación y Técnico Investigador en el Centro Biotecnológico de Investigación e Innovación (CBI+I) de ORT. Pasantía de investigación en la Universidad Complutense de Madrid (2023). Vocal de la Comisión Directiva de la Sociedad de Biocatálisis y Biotransformaciones del Uruguay (SBBU). Coautor de publicaciones en biocatálisis e inmovilización bacteriana. Actualmente trabaja en Antarka, startup de biotecnología antártica invertida por IndieBio y Natura Ventures. Docente del Laboratorio de Control de Calidad en ORT.</p>
+      <div class="doc-links">
+        <a href="https://uy.linkedin.com/in/nicol%C3%A1s-soriano-%C3%A1vila-960a4a135" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+        <a href="https://www.researchgate.net/profile/Nicolas-Soriano-Avila" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>ResearchGate</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#1A3050,#0055A5)">
+        <span class="avatar-initials">FM</span>
+        <div class="avatar-line" style="background:var(--blue-mid)"></div>
+      </div>
+      <div class="doc-name">Felipe Machado, MBA</div>
+      <div class="doc-role">Ing. Biotecnología / MBA · ORT Uruguay</div>
+      <p class="doc-bio">Ingeniero en Biotecnología por ORT Uruguay, con especialización en la Universidad de Quilmes (Argentina) y MBA en ORT. Cofundador y COO de Enteria. Docente de Microbiología, Laboratorio de Microbiología, Biología Vegetal, Bionegocios y Laboratorio de Control de Calidad.</p>
+      <div class="doc-links">
+        <a href="mailto:machado@ort.edu.uy" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/felipe-machado-casini-9835167b" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#2E1A50,#7C3AED)">
+        <span class="avatar-initials">ZM</span>
+        <div class="avatar-line" style="background:#9F7AEA"></div>
+      </div>
+      <div class="doc-name">Zelmar Mendía, Qco</div>
+      <div class="doc-role">Químico · Consultor GxP · UdelaR</div>
+      <p class="doc-bio">Químico egresado de la Universidad de la República. Posgrados en Gestión de Servicios de Salud (UdelaR), Salud Pública Internacional (ISCIII-ENS, España) y Auditoría Médica (Univ. Favaloro, Argentina). Consultor en asuntos regulatorios y Auditor GxP. Docente en ORT en Introducción al Laboratorio, Aspectos Éticos y LCC.</p>
+      <div class="doc-links">
+        <a href="mailto:zelmar_mendia@hotmail.com" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/zmendia" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#0F2D3B,#00A8CC)">
+        <span class="avatar-initials">CU</span>
+        <div class="avatar-line" style="background:var(--cyan)"></div>
+      </div>
+      <div class="doc-name">Carolina Urquiola, QF</div>
+      <div class="doc-role">Química Farmacéutica · Inspectora GMP</div>
+      <p class="doc-bio">Química Farmacéutica con más de 10 años como inspectora del Ministerio de Salud Pública en habilitación sanitaria y certificación GMP. Inspectora MERCOSUR especializada en industria farmacéutica. Consultora independiente en habilitación GMP. Posgrado en Sistemas de Calidad (IL3 Universitat de Barcelona). Docente en el módulo de Sistemas de Calidad del LCC.</p>
+      <div class="doc-links">
+        <a href="mailto:carolur80@hotmail.com" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/carolina-urquiola-115430109" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#1A2E1A,#166534)">
+        <span class="avatar-initials">FP</span>
+        <div class="avatar-line" style="background:var(--teal)"></div>
+      </div>
+      <div class="doc-name">Federico Parnizari, Lic.</div>
+      <div class="doc-role">Lic. Bioquímica · Data Scientist · ORT</div>
+      <p class="doc-bio">Licenciado en Bioquímica (Facultad de Ciencias, UdelaR) con diploma en Analítica de Big Data en ORT. Diez años de experiencia en el Laboratorio de Control de Calidad Biotecnológico de Laboratorios Iclos. Actualmente Clinical Data Scientist Lead en TRIO (Translational Research in Oncology). Docente de LCC en ORT.</p>
+      <div class="doc-links">
+        <a href="mailto:fedepc3@hotmail.com" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/federico-parnizari-7655585b" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+    <div class="docente-card">
+      <div class="avatar" style="background:linear-gradient(135deg,#2E1A1A,#B45309)">
+        <span class="avatar-initials">JS</span>
+        <div class="avatar-line" style="background:var(--amber)"></div>
+      </div>
+      <div class="doc-name">Julia Sanguinetti, QF</div>
+      <div class="doc-role">Química Farmacéutica · Docente LCC</div>
+      <p class="doc-bio">Química Farmacéutica integrante del equipo docente del Laboratorio de Control de Calidad en la Universidad ORT Uruguay. Participa en el módulo de control de biofármacos con experiencia en el sector farmacéutico y de salud.</p>
+      <div class="doc-links">
+        <a href="mailto:julisanguinetti@gmail.com" class="dlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/></svg>Email</a>
+        <a href="https://uy.linkedin.com/in/julia-sanguinetti-027b8760" target="_blank" class="dlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</a>
+      </div>
+    </div>
+
+  </div>
+</div></section>
+
+<div class="divider"><div class="divider-cross"></div><div class="divider-cross"></div><div class="divider-cross"></div></div>
+
+<!-- PLAN -->
+<section id="plan"><div class="section-inner">
+  <div class="eyebrow reveal">Plan del curso</div>
+  <h2 class="section-h2 reveal">Descripción y <em>Objetivos</em></h2>
+  <p class="reveal" style="font-family:'Crimson Pro',serif;font-size:1.12rem;font-style:italic;color:var(--muted);max-width:700px;line-height:1.85;margin-bottom:3rem">
+    Este curso brinda a los estudiantes las habilidades y conocimientos para trabajar bajo sistemas de gestión de la calidad y aplicarlos en el control de un biofarmacéutico siguiendo métodos de farmacopea. Integra normativa regulatoria, buenas prácticas y técnicas avanzadas de laboratorio.
+  </p>
+  <div class="two-col reveal" style="margin-bottom:3rem">
+    <div>
+      <div class="col-head">Conceptos clave</div>
+      <div class="tag-wrap">
+        <span class="tag">Gestión de la calidad</span>
+        <span class="tag">Aseguramiento de calidad</span>
+        <span class="tag">Buenas prácticas de fabricación (GMP)</span>
+        <span class="tag">Buenas prácticas de laboratorio (GLP)</span>
+        <span class="tag">GCP / GDP</span>
+        <span class="tag">Diseño de instalaciones</span>
+        <span class="tag">Métodos validados de análisis</span>
+        <span class="tag">Registro y trazabilidad</span>
+        <span class="tag">Gestión de riesgos</span>
+        <span class="tag">HACCP</span>
+        <span class="tag">Auditorías de calidad</span>
+        <span class="tag">Bioseguridad</span>
+        <span class="tag">Control de biofármacos</span>
+        <span class="tag">Farmacopea (USP / EP)</span>
+        <span class="tag">Criterios de aceptación</span>
+      </div>
+    </div>
+    <div>
+      <div class="col-head">Habilidades</div>
+      <div class="tag-wrap">
+        <span class="tag skill">Interpretación de normativas GxP</span>
+        <span class="tag skill">Lectura de monografías de farmacopea</span>
+        <span class="tag skill">Elaboración de procedimientos (SOPs)</span>
+        <span class="tag skill">Técnicas de electroforesis (SDS-PAGE, WB)</span>
+        <span class="tag skill">HPLC / SEC</span>
+        <span class="tag skill">Ensayos biológicos de potencia</span>
+        <span class="tag skill">Pruebas de esterilidad y control de lote</span>
+        <span class="tag skill">Registro en cuaderno de laboratorio</span>
+        <span class="tag skill">Comunicación científica oral</span>
+        <span class="tag skill">Trabajo autónomo en laboratorio</span>
+      </div>
+    </div>
+  </div>
+  <div class="eyebrow reveal">Al finalizar el curso</div>
+  <div class="obj-grid reveal">
+    <div class="obj-item"><div class="obj-num">01</div>Manejar los conceptos fundamentales de sistemas de gestión de la calidad, normativas GMP/GLP y gestión de riesgos y auditorías.</div>
+    <div class="obj-item"><div class="obj-num">02</div>Comprender y aplicar principios de Buenas Prácticas de Laboratorio (BPL) en el control de productos biotecnológicos.</div>
+    <div class="obj-item"><div class="obj-num">03</div>Identificar y evaluar requisitos de gestión de calidad: documentación, trazabilidad y aseguramiento.</div>
+    <div class="obj-item"><div class="obj-num">04</div>Ejecutar técnicas de laboratorio para control de calidad de biofármacos con autonomía y precisión.</div>
+    <div class="obj-item"><div class="obj-num">05</div>Interpretar y llevar a la práctica ensayos definidos en las monografías de farmacopeas (USP, EP).</div>
+    <div class="obj-item"><div class="obj-num">06</div>Aplicar técnicas de registro y documentación garantizando integridad y trazabilidad de los datos.</div>
+    <div class="obj-item"><div class="obj-num">07</div>Analizar y evaluar críticamente resultados, identificando desviaciones, tendencias y puntos de mejora.</div>
+    <div class="obj-item"><div class="obj-num">08</div>Realizar pruebas de control de calidad en biofármacos: identificación, impurezas y potencia.</div>
+    <div class="obj-item"><div class="obj-num">09</div>Diseñar experimentos de validación y verificación de métodos de control de calidad.</div>
+    <div class="obj-item"><div class="obj-num">10</div>Comunicar de manera clara y precisa los resultados y conclusiones obtenidos en el laboratorio.</div>
+  </div>
+</div></section>
+
+<div class="divider"><div class="divider-cross"></div><div class="divider-cross"></div><div class="divider-cross"></div></div>
+
+<!-- MÓDULOS -->
+<section id="modulos"><div class="section-inner">
+  <div class="eyebrow reveal">Estructura del curso</div>
+  <h2 class="section-h2 reveal">Módulos y <em>Organización</em></h2>
+
+  <div class="mod-phases reveal">
+    <div class="phase-block">
+      <div class="phase-head m1">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);margin-bottom:.3rem">Módulo 1</div>
+          <div class="phase-title">Normativas y Gestión de Calidad</div>
+        </div>
+        <div class="phase-weeks">Semanas 1 – 6</div>
+      </div>
+      <div class="phase-body">
+        <p class="phase-desc">10 clases teóricas frontales de 2 horas. Conocimiento y profundización en lineamientos regulatorios aplicables a producción, control de calidad y gestión de productos biotecnológicos. Incluye un parcial al finalizar.</p>
+        <div class="phase-topics">
+          <div class="topic-row"><div class="topic-dot m1c"></div>Industria Farmacéutica y GMP</div>
+          <div class="topic-row"><div class="topic-dot m1c"></div>GMP en productos biológicos</div>
+          <div class="topic-row"><div class="topic-dot m1c"></div>Personal y Documentación</div>
+          <div class="topic-row"><div class="topic-dot m1c"></div>HACCP / Sistemas de Gestión de Calidad</div>
+          <div class="topic-row"><div class="topic-dot m1c"></div>GDP / GCP / GLP</div>
+          <div class="topic-row"><div class="topic-dot m1c"></div>Auditorías y Bioseguridad</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="phase-block">
+      <div class="phase-head m2">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.15em;text-transform:uppercase;color:#059669;margin-bottom:.3rem">Módulo 2</div>
+          <div class="phase-title">Control de Calidad de Biofármacos</div>
+        </div>
+        <div class="phase-weeks">Semanas 7 – 16</div>
+      </div>
+      <div class="phase-body">
+        <p class="phase-desc">8 clases prácticas de laboratorio de 3,5 horas. Los estudiantes desarrollan capacidad de trabajo autónomo en la ejecución, registro y análisis de técnicas de control de calidad aplicadas a biofármacos.</p>
+        <div class="phase-topics">
+          <div class="topic-row"><div class="topic-dot m2c"></div>G-CSF: Filgrastim como modelo biofarmacéutico</div>
+          <div class="topic-row"><div class="topic-dot m2c"></div>Electroforesis SDS-PAGE y Western Blot</div>
+          <div class="topic-row"><div class="topic-dot m2c"></div>HPLC y SEC – Pureza e identidad</div>
+          <div class="topic-row"><div class="topic-dot m2c"></div>Pruebas de esterilidad y control de lote</div>
+          <div class="topic-row"><div class="topic-dot m2c"></div>Ensayo biológico de potencia</div>
+          <div class="topic-row"><div class="topic-dot m2c"></div>Farmacopea USP / EP: monografías aplicadas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="eyebrow reveal">Metodología</div>
+  <div class="metodo-grid reveal">
+    <div class="metodo-card">
+      <span class="metodo-icon">📋</span>
+      <div class="metodo-title">Clases Teóricas (Módulo 1)</div>
+      <p class="metodo-body">Exposición y discusión de normativas regulatorias actuales. Análisis de casos de la industria farmacéutica y biotecnológica. Profundización en sistemas de gestión y herramientas de riesgo.</p>
+    </div>
+    <div class="metodo-card">
+      <span class="metodo-icon">🔬</span>
+      <div class="metodo-title">Prácticas de Laboratorio (Módulo 2)</div>
+      <p class="metodo-body">Sesiones presenciales de 3,5 horas. Ejecución autónoma de técnicas analíticas con registro formal en cuaderno de laboratorio. Control de lectura al inicio de cada sesión.</p>
+    </div>
+    <div class="metodo-card">
+      <span class="metodo-icon">📊</span>
+      <div class="metodo-title">Presentación de Casos</div>
+      <p class="metodo-body">Trabajo integrador grupal que abarca ambos módulos. Presentación oral que vincula normativa, técnicas analíticas y criterios de calidad en un contexto real de biofármaco.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:3rem">
+    <div class="eyebrow reveal">Horarios por grupo</div>
+    <div class="horarios-wrap reveal">
+      <div class="grupo-card">
+        <div class="grupo-head">
+          <div class="grupo-name">M7A · Teórico</div>
+          <div class="grupo-type tipo-teo">Módulo 1 · Teórico</div>
+        </div>
+        <div class="grupo-row"><span class="dia">Lunes</span><span class="hora">Horario a confirmar</span></div>
+      </div>
+      <div class="grupo-card">
+        <div class="grupo-head">
+          <div class="grupo-name">M7B · Teórico</div>
+          <div class="grupo-type tipo-teo">Módulo 1 · Teórico</div>
+        </div>
+        <div class="grupo-row"><span class="dia">Martes</span><span class="hora">Horario a confirmar</span></div>
+      </div>
+      <div class="grupo-card">
+        <div class="grupo-head">
+          <div class="grupo-name">M2_M7A · Práctico</div>
+          <div class="grupo-type tipo-pra">Módulo 2 · Lab.</div>
+        </div>
+        <div class="grupo-row"><span class="dia">Lunes</span><span class="hora">3,5 horas · laboratorio</span></div>
+      </div>
+      <div class="grupo-card">
+        <div class="grupo-head">
+          <div class="grupo-name">M2_M7B · Práctico</div>
+          <div class="grupo-type tipo-pra">Módulo 2 · Lab.</div>
+        </div>
+        <div class="grupo-row"><span class="dia">Martes</span><span class="hora">3,5 horas · laboratorio</span></div>
+      </div>
+      <div class="grupo-card">
+        <div class="grupo-head">
+          <div class="grupo-name">M2_M7C · Práctico</div>
+          <div class="grupo-type tipo-pra">Módulo 2 · Lab.</div>
+        </div>
+        <div class="grupo-row"><span class="dia">Miércoles</span><span class="hora">3,5 horas · laboratorio</span></div>
+      </div>
+      <div class="grupo-card">
+        <div class="grupo-head">
+          <div class="grupo-name">M2_M7D · Práctico</div>
+          <div class="grupo-type tipo-pra">Módulo 2 · Lab.</div>
+        </div>
+        <div class="grupo-row"><span class="dia">Jueves</span><span class="hora">3,5 horas · laboratorio</span></div>
+      </div>
+    </div>
+    <div class="nota reveal">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span><strong>Importante:</strong> las entregas son online hasta las 21:00 hs. Se requiere lectura previa del protocolo antes de cada práctica. Inscripción obligatoria por Gestión para parciales y obligatorio. El calendario es orientativo.</span>
+    </div>
+  </div>
+</div></section>
+
+<div class="divider"><div class="divider-cross"></div><div class="divider-cross"></div><div class="divider-cross"></div></div>
+
+<!-- CALENDARIO -->
+<section id="calendario"><div class="section-inner">
+  <div class="eyebrow reveal">Cronograma</div>
+  <h2 class="section-h2 reveal">Calendario <em>2026</em> <span style="font-size:.42em;font-weight:300;color:var(--muted);font-style:normal"> · referencia orientativa</span></h2>
+  <div class="reveal" style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem">
+    <span class="badge b-teo">Teórico</span>
+    <span class="badge b-pra">Práctico</span>
+    <span class="badge b-eva">Evaluación</span>
+    <span class="badge b-hol">Feriado/Cierre</span>
+  </div>
+
+  <!-- MÓDULO 1 -->
+  <div class="cal-wrap reveal">
+    <div class="cal-phase-label lbl-m1">▪ MÓDULO 1 · Normativas y Gestión de Calidad · Semanas 1–6 · Grupos M7A (Lunes) y M7B (Martes)</div>
+    <table class="cal-table">
+      <thead><tr><th>Sem.</th><th>Día</th><th>Fecha</th><th>Tema</th><th>Docente</th></tr></thead>
+      <tbody id="calMod1"></tbody>
+    </table>
+    <div class="cal-phase-label lbl-hol">▪ 30 Mar – 3 Abr · Semana de Turismo / Universidad Cerrada</div>
+    <table class="cal-table">
+      <thead><tr><th>Sem.</th><th>Día</th><th>Fecha</th><th>Tema</th><th>Docente</th></tr></thead>
+      <tbody id="calMod1b"></tbody>
+    </table>
+    <div class="cal-phase-label lbl-eva" style="background:#FEF2F2;color:var(--red)">▪ Semana 6 · Evaluación Módulo 1</div>
+    <table class="cal-table">
+      <thead><tr><th>Sem.</th><th>Día</th><th>Fecha</th><th>Tema</th><th>Docente</th></tr></thead>
+      <tbody id="calMod1c"></tbody>
+    </table>
+  </div>
+
+  <!-- MÓDULO 2 -->
+  <div class="cal-wrap reveal" style="margin-top:1.5rem">
+    <div class="cal-phase-label lbl-m2">▪ MÓDULO 2 · Control de Calidad de Biofármacos · Semanas 7–16 · Grupos M2_M7A/B/C/D (Lun–Jue)</div>
+    <table class="cal-table">
+      <thead><tr><th>Sem.</th><th>Práctica</th><th>Semana de</th><th>Tema / Actividad</th><th>Tipo</th></tr></thead>
+      <tbody id="calMod2"></tbody>
+    </table>
+  </div>
+</div></section>
+
+<div class="divider"><div class="divider-cross"></div><div class="divider-cross"></div><div class="divider-cross"></div></div>
+
+<!-- EVALUACIONES -->
+<section id="evaluaciones"><div class="section-inner">
+  <div class="eyebrow reveal">Evaluaciones</div>
+  <h2 class="section-h2 reveal">Sistema de <em>Evaluación</em></h2>
+  <div class="eval-grid reveal">
+    <div class="eval-row"><div class="eval-idx">1</div><div><div class="eval-name">Evaluación Módulo 1 – Sistemas GMP</div><div class="eval-desc">Parcial escrito · Múltiple opción, fundamentación y desarrollo · Presencial<br><span style="color:var(--red);font-size:.72rem;font-family:'JetBrains Mono'">⚠ Mínimo requerido: 8 puntos</span></div><div class="eval-bar"><div class="eval-bar-fill fill-25" data-w="25%" style="width:0"></div></div></div><div class="eval-pts">25<span>puntos</span></div></div>
+    <div class="eval-row"><div class="eval-idx">2</div><div><div class="eval-name">Presentación de Casos (Obligatorio)</div><div class="eval-desc">Presentación oral grupal · Trabajo integrador de ambos módulos · Todo el período del Módulo 2</div><div class="eval-bar"><div class="eval-bar-fill fill-20" data-w="20%" style="width:0"></div></div></div><div class="eval-pts">20<span>puntos</span></div></div>
+    <div class="eval-row"><div class="eval-idx">3</div><div><div class="eval-name">Entregas y Actuación en Clase</div><div class="eval-desc">Ejercicios de análisis, lectura previa de prácticas, registro en cuaderno de laboratorio · Módulo 2</div><div class="eval-bar"><div class="eval-bar-fill fill-5" data-w="5%" style="width:0"></div></div></div><div class="eval-pts">5<span>puntos</span></div></div>
+    <div class="eval-row"><div class="eval-idx">4</div><div><div class="eval-name">Informe de Laboratorio</div><div class="eval-desc">Informe grupal de la totalidad de las prácticas del Módulo 2 · Formato: introducción, M&M, resultados, discusión, conclusiones y bibliografía</div><div class="eval-bar"><div class="eval-bar-fill fill-20" data-w="20%" style="width:0"></div></div></div><div class="eval-pts">20<span>puntos</span></div></div>
+    <div class="eval-row"><div class="eval-idx">5</div><div><div class="eval-name">Parcial Oral Módulo 2</div><div class="eval-desc">Oral individual · ~30 minutos · Guía de preguntas sobre todas las prácticas y conceptos del Módulo 2</div><div class="eval-bar"><div class="eval-bar-fill fill-30" data-w="30%" style="width:0"></div></div></div><div class="eval-pts">30<span>puntos</span></div></div>
+    <div class="eval-row total-row"><div class="eval-idx sigma">Σ</div><div><div class="eval-name">Total</div><div class="eval-desc">5 instancias de evaluación a lo largo del semestre</div></div><div class="eval-pts">100<span>puntos</span></div></div>
+  </div>
+
+  <div style="margin-top:3rem">
+    <div class="eyebrow reveal">Condiciones de aprobación</div>
+    <div class="cond-list reveal">
+      <div class="cond-item"><div class="cond-idx">1</div><div style="font-size:.875rem;color:var(--muted)">Obtener <strong style="color:var(--text)">mínimo 8 puntos</strong> en la evaluación del Parcial del Módulo 1 (GMP). Es condición necesaria independiente del total.</div></div>
+      <div class="cond-item"><div class="cond-idx">2</div><div style="font-size:.875rem;color:var(--muted)">Obtener <strong style="color:var(--text)">70 puntos o más</strong> en el total de las 5 evaluaciones. Si no se alcanza, hay derecho a una segunda instancia: prueba escrita del Módulo 2.</div></div>
+      <div class="cond-item"><div class="cond-idx">3</div><div style="font-size:.875rem;color:var(--muted)">No superar el límite de <strong style="color:var(--text)">3 faltas</strong> en las clases prácticas de laboratorio (asistencia obligatoria).</div></div>
+      <div class="cond-item"><div class="cond-idx">4</div><div style="font-size:.875rem;color:var(--muted)">Inscribirse a través de <strong style="color:var(--text)">Gestión</strong> a las instancias obligatorias. Las entregas son online hasta las 21:00 hs.</div></div>
+    </div>
+  </div>
+
+  <div style="margin-top:3rem">
+    <div class="eyebrow reveal">Rúbrica · Presentación Oral de Casos (Obligatorio)</div>
+    <div class="rub-wrap reveal">
+      <table class="rub-table">
+        <thead><tr><th>Criterio</th><th>El/la estudiante:</th></tr></thead>
+        <tbody>
+          <tr><td>Introducción</td><td><ul><li>Plantea una visión de lo general a lo específico del proyecto</li><li>Argumenta la importancia del tema en el contexto de la industria biotecnológica</li></ul></td></tr>
+          <tr><td>Objetivos</td><td><ul><li>Plantea objetivo general del módulo y objetivos específicos bien definidos de la sección a presentar</li></ul></td></tr>
+          <tr><td>Exposición y discusión</td><td><ul><li>Introduce los experimentos antes de presentar los resultados</li><li>Describe lo observado en las figuras con precisión técnica</li><li>Discute los resultados y los compara con lo reportado en bibliografía</li><li>Concluye en base a los objetivos inicialmente planteados</li></ul></td></tr>
+          <tr><td>Lenguaje</td><td><ul><li>Usa lenguaje académico y técnico adecuado en todo momento</li></ul></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div></section>
+
+<div class="divider"><div class="divider-cross"></div><div class="divider-cross"></div><div class="divider-cross"></div></div>
+
+<!-- BIBLIOGRAFÍA -->
+<section id="bibliografia"><div class="section-inner">
+  <div class="eyebrow reveal">Recursos</div>
+  <h2 class="section-h2 reveal"><em>Bibliografía</em> y Normativa</h2>
+  <div class="biblio-grid reveal">
+    <div>
+      <div class="bib-cat">Módulo 1 · Normativa Regulatoria</div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span>WHO Expert Committee on Specifications for Pharmaceutical Preparations. <em>Technical Report Series</em>, Informes 37_908; 44_957; 49_992 y 50_996. WHO, 2003.</span></div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span>ICH. <em>Guideline for Good Clinical Practice E6(R1)</em>. ICH, 1996. (Adenda E6(R2), ICH, 2016).</span></div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span>World Health Organization. <em>Manual de Bioseguridad en el Laboratorio.</em> WHO, 2005.</span></div>
+    </div>
+    <div>
+      <div class="bib-cat">Módulo 2 · Farmacopeas y Monografías</div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span><em>European Pharmacopoeia</em> (EP) 8.6 / 9.0 / 9.6. Monografías: Filgrastim, Interferón alfa-2, Interferón beta-1a, Molgramostim, Eritropoyetina, Heparina de bajo PM.</span></div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span><em>United States Pharmacopeia (USP) 37.</em> Filgrastim, Monografía Oficial 2983. Análisis de valoraciones biológicas (1034). 2014.</span></div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span>Amgen Manufacturing. <em>Product Monograph Neupogen (Filgrastim) Sterile Solution for Injection.</em> 2013.</span></div>
+    </div>
+    <div>
+      <div class="bib-cat">Material del Curso</div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span><span>Universidad ORT. <em>Introducción al Laboratorio de Control de Calidad. Control de Biofármacos,</em> Manual introductorio. ORT, 2022.</span></div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span>Materiales, protocolos de práctica y presentaciones del equipo docente (disponibles en el aula virtual).</span></div>
+      <div class="bib-item"><span class="bib-ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><div><div>INVIMA / EMA / FDA · Guías regulatorias</div><a href="https://www.ema.europa.eu/en/human-regulatory-overview/research-and-development/scientific-guidelines" class="bib-link" target="_blank">ema.europa.eu ↗</a></div></div>
+    </div>
+  </div>
+</div></section>
+
+</div>
+<footer>
+  <div class="footer-brand">LCC <span>·</span> 6401 <span>·</span> 2026</div>
+  <div class="footer-info">Licenciatura e Ingeniería en Biotecnología<br>Universidad ORT Uruguay · Semestre 7</div>
+</footer>
+
+<script>
+// CALENDAR DATA
+const MOD1 = [
+  {s:'1',d:'Lunes',f:'9 Mar',e:'Introducción al curso · Sistemas de Gestión de Calidad',doc:'ZM',t:'teo'},
+  {s:'1',d:'Martes',f:'10 Mar',e:'Buenas Prácticas de Manufactura en productos de Salud',doc:'CU',t:'teo'},
+  {s:'2',d:'Lunes',f:'16 Mar',e:'Buenas Prácticas de Manufactura en la Industria Farmacéutica',doc:'CU',t:'teo'},
+  {s:'2',d:'Martes',f:'17 Mar',e:'HACCP',doc:'ZM',t:'teo'},
+  {s:'3',d:'Lunes',f:'23 Mar',e:'Personal / Documentación',doc:'ZM',t:'teo'},
+  {s:'3',d:'Martes',f:'24 Mar',e:'Buenas Prácticas de Manufactura – Biológicos',doc:'CU',t:'teo'},
+];
+const MOD1b = [
+  {s:'4',d:'Lunes',f:'6 Abr',e:'GDP / GCP',doc:'CU',t:'teo'},
+  {s:'4',d:'Martes',f:'7 Abr',e:'Auditorías',doc:'ZM',t:'teo'},
+  {s:'5',d:'Lunes',f:'13 Abr',e:'Buenas Prácticas de Laboratorio',doc:'CU',t:'teo'},
+  {s:'5',d:'Martes',f:'14 Abr',e:'Bioseguridad · Resumen del dictado',doc:'ZM',t:'teo'},
+];
+const MOD1c = [
+  {s:'6',d:'Lunes',f:'20 Abr',e:'Clase de consultas para el Parcial 1',doc:'ZM',t:'teo'},
+  {s:'6',d:'Martes',f:'21 Abr',e:'⚡ PARCIAL 1 – Laboratorio de Control de Calidad (18:00–20:00 hs)',doc:'CU',t:'eva'},
+];
+const MOD2 = [
+  {s:'7',p:'Práctica 1',f:'27 Abr',e:'Teórico G-CSF · Entrega de muestras · Preparación de diluciones · Preparación de Geles',t:'pra'},
+  {s:'8',p:'Práctica 2',f:'4 May',e:'Electroforesis SDS-PAGE – Geles Poliacrilamida · G-CSF',t:'pra'},
+  {s:'9',p:'Práctica 3',f:'11 May',e:'Tinción · Western Blot · Análisis de Geles',t:'pra'},
+  {s:'9',p:'Teórico',f:'11 May',e:'Farmacopea: presentación de casos · Introducción HPLC · Explicativa de prácticas',t:'teo'},
+  {s:'10',p:'Práctica 4',f:'18 May',e:'HPLC – Inyección demostrativa · Análisis de resultados Geles · Ejercicio mapeo peptídico IEF',t:'pra'},
+  {s:'11',p:'Práctica 5',f:'25 May',e:'Esterilidad y Control de Lote',t:'pra'},
+  {s:'12',p:'Práctica 6',f:'1 Jun',e:'Esterilidad y Control de Lote (continuación) · Explicativa ensayo biológico',t:'pra'},
+  {s:'13',p:'Práctica 7',f:'8 Jun',e:'Ensayo Biológico de Potencia',t:'pra'},
+  {s:'14',p:'Práctica 8',f:'15 Jun',e:'Resultados de Ensayo Biológico · Dudas del Obligatorio · Resumen general',t:'pra'},
+  {s:'15',p:'Obligatorio',f:'22 Jun',e:'Presentación Oral de Casos – Grupo A',t:'eva'},
+  {s:'15',p:'Obligatorio',f:'23 Jun',e:'Presentación Oral de Casos – Grupo B',t:'eva'},
+  {s:'16',p:'Parcial 2',f:'29 Jun',e:'⚡ PARCIAL ORAL Módulo 2 – Individual · ~30 min · Grupos A y B',t:'eva'},
+];
+
+function buildRow(r,cols){
+  const t=r.t;
+  const bc=t==='teo'?'b-teo':t==='eva'?'b-eva':t==='pra'?'b-pra':'b-hol';
+  const tc=t==='eva'?'c-tema parcial':'c-tema';
+  const badge=t!=='teo'?`<span class="badge ${bc}">${t==='eva'?'Evaluación':t==='pra'?'Práctico':'Feriado'}</span>`:'';
+  if(cols==='mod1'){
+    return `<tr>
+      <td><span class="c-sem">${r.s}</span></td>
+      <td><span class="c-dia">${r.d}</span></td>
+      <td class="c-fecha">${r.f}</td>
+      <td><span class="${tc}">${r.e}</span>${badge}</td>
+      <td class="c-doc">${r.doc||''}</td>
+    </tr>`;
+  } else {
+    return `<tr>
+      <td><span class="c-sem">${r.s}</span></td>
+      <td><span class="c-dia">${r.p||''}</span></td>
+      <td class="c-fecha">${r.f}</td>
+      <td><span class="${tc}">${r.e}</span>${badge}</td>
+    </tr>`;
+  }
+}
+
+document.getElementById('calMod1').innerHTML = MOD1.map(r=>buildRow(r,'mod1')).join('');
+document.getElementById('calMod1b').innerHTML = MOD1b.map(r=>buildRow(r,'mod1')).join('');
+document.getElementById('calMod1c').innerHTML = MOD1c.map(r=>buildRow(r,'mod1')).join('');
+document.getElementById('calMod2').innerHTML = MOD2.map(r=>buildRow(r,'mod2')).join('');
+
+// SCROLL REVEAL
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      e.target.querySelectorAll('.eval-bar-fill').forEach(b=>{b.style.width=b.dataset.w});
+    }
+  });
+},{threshold:.07});
+document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+
+// ACTIVE NAV
+const secs=document.querySelectorAll('section[id]');
+const lnks=document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll',()=>{
+  let cur='';
+  secs.forEach(s=>{if(window.scrollY>=s.offsetTop-130)cur=s.id});
+  lnks.forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));
+},{passive:true});
+
+// HERO DECO FADE IN
+setTimeout(()=>{
+  const d=document.querySelector('.hero-deco');
+  if(d)d.style.cssText+='opacity:0.12;transition:opacity 1s ease';
+},900);
+</script>
+</body>
+</html>
